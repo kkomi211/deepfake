@@ -1,8 +1,7 @@
 import io
 import json
 import math
-import base64
-from typing import Dict, Tuple
+from typing import Dict
 
 import numpy as np
 from PIL import Image, PngImagePlugin
@@ -104,9 +103,9 @@ def svd_embed(subband: np.ndarray, wm: np.ndarray, alpha: float):
     subband_new = (U_s @ np.diag(S_s_new) @ Vt_s).astype(np.float32)
 
     key = {
-        "S_sub_original": S_s,  # 반블라인드 추출용
-        "U_w": U_w,
-        "Vt_w": Vt_w,
+        "S_sub_original": S_s.astype(np.float32),  # 반블라인드 추출용
+        "U_w": U_w.astype(np.float32),
+        "Vt_w": Vt_w.astype(np.float32),
         "wm_shape": list(wm_resized.shape),
         "alpha": float(alpha),
     }
@@ -143,9 +142,9 @@ def embed_pipeline(host_img: Image.Image, wm_img: Image.Image,
         "method": "svd",
         "wavelet": wavelet, "level": level, "band": band, "alpha": alpha,
         "key": {
-            "S_sub_original": key["S_sub_original"].astype(np.float32),
-            "U_w": key["U_w"].astype(np.float32),
-            "Vt_w": key["Vt_w"].astype(np.float32),
+            "S_sub_original": key["S_sub_original"],
+            "U_w": key["U_w"],
+            "Vt_w": key["Vt_w"],
             "wm_shape": key["wm_shape"],
             "alpha": key["alpha"],
         },
@@ -263,15 +262,15 @@ def embed_pipeline_y(host_img: Image.Image, wm_img: Image.Image,
     Y_marked = np.clip(Y_marked, 0, 255).astype(np.uint8)
 
     out_rgb = Image.merge('YCbCr', (Image.fromarray(Y_marked, 'L'), Cb, Cr)).convert('RGB')
-    psnr_db = psnr(Y_arr, Y_marked.astype(np.float32))
+    psnr_db = psnr(Y_arr, Y_marked.astype(np.float32))  # Y 채널 기준 PSNR
 
     meta = {
         "method": "svd_y",
         "wavelet": wavelet, "level": level, "band": band, "alpha": alpha,
         "key": {
-            "S_sub_original": key["S_sub_original"].astype(np.float32),
-            "U_w": key["U_w"].astype(np.float32),
-            "Vt_w": key["Vt_w"].astype(np.float32),
+            "S_sub_original": key["S_sub_original"],
+            "U_w": key["U_w"],
+            "Vt_w": key["Vt_w"],
             "wm_shape": key["wm_shape"],
             "alpha": key["alpha"],
         },
